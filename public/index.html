@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple multiplayer game</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="leaderboard-container">
+            <div style="margin-bottom: 8px">Leaderboard</div>
+            <div id="playerLabels"></div>
+        </div>
+        <canvas></canvas>
+        <!-- username input -->
+        <div class="username-input-container">
+            <form id="usernameForm">
+                <div>
+                    <input
+                        id="usernameInput"
+                        type="text"
+                        placeholder="Enter your name"
+                        class="username-input"
+                        onkeyup="updateName()"
+                        autocomplete="off"
+                    />
+                </div>
+                <div style="text-align: center; margin-top: 10px">
+                    <button class="btn-start">
+                        Start!
+                    </button>
+                </div>
+            </form>
+        </div>
+        <!-- username input end -->
+    </div>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.2/gsap.min.js"
+        integrity="sha512-kVlGhj2qFy+KBCFuvjBJTGUMxbdqJKs4yK2jh0e0VPhWUPiPC87bzm4THmaaIee3Oj7j6sDpTTgm2EPPiESqBg=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"
+    ></script>  
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="js/classses/PLayer.js"></script>
+    <script src="js/classses/Projectile.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/nameInput.js"></script>
+    <script src="js/formAction.js"></script>
+</body>
+</html>
