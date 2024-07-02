@@ -1,8 +1,6 @@
 const canvas = document.querySelector('canvas');
 const c = canvas.getContext('2d');
 
-const scoreEl = document.querySelector('#scoreEl');
-
 const devicePixelRatio = window.devicePixelRatio || 1;
 canvas.width = 1024 * devicePixelRatio;
 canvas.height = 576 * devicePixelRatio;
@@ -115,24 +113,8 @@ function animate() {
   animationId = requestAnimationFrame(animate);
   c.clearRect(0, 0, canvas.width, canvas.height);
 
-  for (const id in players) {
-    const player = players[id];
-
-    if (player.target) {
-      players[id].x +=
-        (players[id].target.x - players[id].x) * 0.5;
-      players[id].y +=
-        (players[id].target.y - players[id].y) * 0.5;
-    }
-
-    player.draw();
-  }
-
-  for (const id in projectiles) {
-    const projectile = projectiles[id];
-    projectile.draw();
-  }
-
+  for (const id in players) players[id].draw();
+  for (const id in projectiles) projectiles[id].draw();
 }
 
 animate();

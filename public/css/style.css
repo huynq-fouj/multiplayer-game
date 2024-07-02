@@ -41,10 +41,16 @@ canvas {
     color: white;
     padding: 8px;
     font-family: sans-serif;
-    font-size: 14px;
     user-select: none;
     background: rgba(0, 0, 0, 0.5);
     display: none;
+    font-size: 16px;
+}
+
+.leaderboard-title {
+    margin-bottom: 8px;
+    font-size: 16px;
+    font-weight: bold;
 }
 
 .username-input-container {
@@ -87,3 +93,4 @@ canvas {
 .btn-start:hover {
     box-shadow: 0 0 6px #9555ef;
 }
+

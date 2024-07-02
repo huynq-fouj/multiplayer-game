@@ -13,10 +13,11 @@ const io = new Server(server, {
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html')
+  res.sendFile(__dirname + '/index.html');
 });
 
 const SPEED = 5;
+const P_SPEED = 5;
 const RADIUS = 14;
 const P_RADIUS = 5;
 let projectileId = 0;
@@ -83,8 +84,8 @@ io.on('connection', socket => {
   socket.on('shoot', ({ x, y, angle }) => {
     projectileId++;
     const velocity = {
-      x: Math.cos(angle) * 5,
-      y: Math.sin(angle) * 5
+      x: Math.cos(angle) * P_SPEED,
+      y: Math.sin(angle) * P_SPEED
     };
 
     projectiles[projectileId] = {
@@ -95,8 +96,11 @@ io.on('connection', socket => {
     }
   });
 
-  socket.on('disconnect', reason => {
+  socket.on('disconnect', () => {
     delete players[socket.id];
+    for(const id in projectiles) {
+      if(projectiles[id].playerId === socket.id) delete projectiles[id];
+    }
     io.emit('update-players', players);
   });
 });
