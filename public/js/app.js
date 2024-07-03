@@ -15,6 +15,7 @@ const projectiles = {};
 
 const socket = io();
 
+//
 socket.on('update-players', data => {
   for(const id in data) {
     const player = data[id];
@@ -26,31 +27,12 @@ socket.on('update-players', data => {
         color: player.color,
         username: player.username
       });
+
       //Init player labels
       document.querySelector('#playerLabels').innerHTML += `<div data-id="${id}" data-score="${player.score}">${player.username}: ${player.score}</div>`
     } else {
-      document.querySelector(`div[data-id="${id}"]`).innerHTML = `${player.username}: ${player.score}`;
-      document.querySelector(`div[data-id="${id}"]`).setAttribute('data-score', player.score);
 
-      //Sorts the players divs
-      const parentDiv = document.querySelector('#playerLabels');
-      const childDivs = Array.from(parentDiv.querySelectorAll('div'));
-
-      childDivs.sort((a, b) => {
-        const scoreA = Number(a.getAttribute('data-score'));
-        const scoreB = Number(b.getAttribute('data-score'));
-        return scoreB - scoreA;
-      });
-
-      //Removes old elements
-      childDivs.forEach((div) => {
-        parentDiv.removeChild(div);
-      });
-
-      //Adds sorted elements
-      childDivs.forEach((div) => {
-        parentDiv.appendChild(div);
-      });
+      sortedPlayerScore(id, player);
 
       gsap.to(players[id], {
         x: player.x,
@@ -76,7 +58,7 @@ socket.on('update-players', data => {
       divToDelete.parentNode.removeChild(divToDelete);
       if (id === socket.id) {
         document.querySelector('.leaderboard-container').style.display = 'none';
-        document.querySelector('.username-input-container').style.display = 'block';
+        document.querySelector('.username-input-container').style.display = 'flex';
       }
 
       delete players[id];
@@ -84,6 +66,7 @@ socket.on('update-players', data => {
   }
 });
 
+//
 socket.on('update-projectiles', data => {
   for (const id in data) {
     const projectile = data[id];
@@ -108,6 +91,7 @@ socket.on('update-projectiles', data => {
   }
 });
 
+//Update frame
 let animationId;
 function animate() {
   animationId = requestAnimationFrame(animate);
@@ -134,6 +118,7 @@ const keys = {
     }
 };
 
+//Handle player movements
 const SPEED = 5;
 const playerInputs = [];
 let sequenceNumber = 0;
@@ -228,3 +213,29 @@ addEventListener('click', (event) => {
     angle
   });
 });
+
+const sortedPlayerScore = (id, player) => {
+  const playerLabel = document.querySelector(`div[data-id="${id}"]`);
+  playerLabel.innerHTML = `${player.username}: ${player.score}`;
+  playerLabel.setAttribute('data-score', player.score);
+
+  //Sorts the players divs
+  const parentDiv = document.querySelector('#playerLabels');
+  const childDivs = Array.from(parentDiv.querySelectorAll('div'));
+
+  childDivs.sort((a, b) => {
+    const scoreA = Number(a.getAttribute('data-score'));
+    const scoreB = Number(b.getAttribute('data-score'));
+    return scoreB - scoreA;
+  });
+
+  //Removes old elements
+  childDivs.forEach((div) => {
+    parentDiv.removeChild(div);
+  });
+
+  //Adds sorted elements
+  childDivs.forEach((div) => {
+    parentDiv.appendChild(div);
+  });
+}
