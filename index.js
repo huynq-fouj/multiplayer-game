@@ -17,12 +17,16 @@ app.get('/', (req, res) => {
 });
 
 const SPEED = 5;
-const P_SPEED = 5;
+const P_SPEED = 6;
 const RADIUS = 14;
 const P_RADIUS = 5;
 let projectileId = 0;
-const canvasWidth = 1024;
-const canvasHeight = 576;
+const tileSize = {
+  width: 328 / 2,
+  height: 368 / 2
+}
+const mapWidth = tileSize.width * 15;
+const mapHeight = tileSize.height * 6;
 
 const players = {};
 const projectiles = {};
@@ -32,18 +36,13 @@ io.on('connection', socket => {
   socket.on('join-game', data => {
     //Create new player
     players[socket.id] = {
-      x: 500 * Math.random(),
-      y: 500 * Math.random(),
+      x: mapWidth * Math.random(),
+      y: mapHeight * Math.random(),
       radius: RADIUS,
       color: `hsl(${360 * Math.random()}, 100%, 50%)`,
       sequenceNumber: 0,
       score: 0,
       username: data.username
-    };
-    //Init canvas
-    players[socket.id].canvas = {
-      width: data.width,
-      height: data.height
     };
 
     io.emit('update-players', players);
@@ -76,23 +75,25 @@ io.on('connection', socket => {
     };
 
     if (playerSides.left < 0) players[socket.id].x = player.radius;
-    if (playerSides.right > canvasWidth) players[socket.id].x = canvasWidth - player.radius;
+    if (playerSides.right > mapWidth) players[socket.id].x = mapWidth - player.radius;
     if (playerSides.top < 0) players[socket.id].y = player.radius;
-    if (playerSides.bottom > canvasHeight) players[socket.id].y = canvasHeight - player.radius;
+    if (playerSides.bottom > mapHeight) players[socket.id].y = mapHeight - player.radius;
   });
 
-  socket.on('shoot', ({ x, y, angle }) => {
+  socket.on('shoot', (angle) => {
+    const player = players[socket.id];
     projectileId++;
     const velocity = {
       x: Math.cos(angle) * P_SPEED,
       y: Math.sin(angle) * P_SPEED
     };
-
+    //New projectile
     projectiles[projectileId] = {
-      x,
-      y,
+      x: player.x,
+      y: player.y,
       velocity,
-      playerId: socket.id
+      playerId: socket.id,
+      timeLeft: 3000
     }
   });
 
@@ -105,21 +106,18 @@ io.on('connection', socket => {
   });
 });
 
-//Update players
+let lastUpdate = Date.now();
 setInterval(() => {
+  const now = Date.now();
+  const delta = now - lastUpdate;
   for (const id in projectiles) {
     //Update projectile position
     projectiles[id].x += projectiles[id].velocity.x;
     projectiles[id].y += projectiles[id].velocity.y;
-    //
-    if (
-      projectiles[id].x - P_RADIUS >=
-        players[projectiles[id].playerId]?.canvas?.width ||
-      projectiles[id].x + P_RADIUS <= 0 ||
-      projectiles[id].y - P_RADIUS >=
-        players[projectiles[id].playerId]?.canvas?.height ||
-      projectiles[id].y + P_RADIUS <= 0
-    ) {
+    //Update timeLeft
+    projectiles[id].timeLeft -= delta
+    //Check timeLeft
+    if (projectiles[id].timeLeft <= 0) {
       delete projectiles[id];
       continue;
     }
@@ -143,12 +141,12 @@ setInterval(() => {
         break;
       }
     }
-
   }
 
   io.emit('update-projectiles', projectiles);
   io.emit('update-players', players);
-}, 15);// FPS = 1000 / 15
+  lastUpdate = now;
+}, 20);// FPS = 1000 / 20
 
 //
 server.listen(PORT, () => {

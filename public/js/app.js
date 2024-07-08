@@ -1,9 +1,18 @@
+const tile = new Image();
+tile.src = '../images/tile.png';
+const tileSize = {
+  width: 328 / 2,
+  height: 368 / 2
+}
+const mapWidth = tileSize.width * 15;
+const mapHeight = tileSize.height * 6;
+
 const canvas = document.querySelector('canvas');
 const c = canvas.getContext('2d');
 
 const devicePixelRatio = window.devicePixelRatio || 1;
-canvas.width = 1024 * devicePixelRatio;
-canvas.height = 576 * devicePixelRatio;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 c.scale(devicePixelRatio, devicePixelRatio);
 
 const x = canvas.width / 2;
@@ -59,6 +68,7 @@ socket.on('update-players', data => {
       if (id === socket.id) {
         document.querySelector('.leaderboard-container').style.display = 'none';
         document.querySelector('.username-input-container').style.display = 'flex';
+        document.querySelector('.username-input-container').classList.add('active');
       }
 
       delete players[id];
@@ -91,14 +101,39 @@ socket.on('update-projectiles', data => {
   }
 });
 
+
+const camera = {
+  x: 0,
+  y: 0,
+  width: canvas.width,
+  height: canvas.height,
+  focus: player => {
+    camera.x = player.x + player.radius - camera.width / 2;
+    camera.y = player.y + player.radius - camera.height / 2;
+    camera.x = Math.max(0, Math.min(mapWidth - camera.width, camera.x));
+    camera.y = Math.max(0, Math.min(mapHeight - camera.height, camera.y));
+  }
+}
+
+const drawMap = (ctx, camera) => {
+  for (let row = 0; row < mapHeight / tileSize.height; row++) {
+    for (let col = 0; col < mapWidth / tileSize.width; col++) {
+      ctx.drawImage(tile, col * tileSize.width - camera.x, row * tileSize.height - camera.y, tileSize.width, tileSize.height);
+    }
+  }
+}
+
 //Update frame
 let animationId;
 function animate() {
   animationId = requestAnimationFrame(animate);
+  if(players[socket.id]) {
+    camera.focus(players[socket.id]);
+  }
   c.clearRect(0, 0, canvas.width, canvas.height);
-
-  for (const id in players) players[id].draw();
-  for (const id in projectiles) projectiles[id].draw();
+  drawMap(c, camera);
+  for (const id in players) players[id].draw(camera);
+  for (const id in projectiles) projectiles[id].draw(camera);
 }
 
 animate();
@@ -197,21 +232,21 @@ addEventListener('click', (event) => {
   if(!players[socket.id]) return;
   const canvas = document.querySelector('canvas');
   const { top, left } = canvas.getBoundingClientRect();
+  
   const playerPosition = {
     x: players[socket.id].x,
     y: players[socket.id].y
   };
 
-  const angle = Math.atan2(
-    event.clientY - top - playerPosition.y,
-    event.clientX - left - playerPosition.x
-  );
+  const mouseX = event.clientX - left;
+  const mouseY = event.clientY - top;
 
-  socket.emit('shoot', {
-    x: playerPosition.x,
-    y: playerPosition.y,
-    angle
-  });
+  const dx = mouseX + camera.x - playerPosition.x;
+  const dy = mouseY + camera.y - playerPosition.y;
+
+  const angle = Math.atan2(dy, dx);
+
+  socket.emit('shoot', angle);
 });
 
 const sortedPlayerScore = (id, player) => {
